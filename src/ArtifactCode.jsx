@@ -1,27 +1,62 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
 
-const App = () => {
-  const [count, setCount] = useState(0);
+const useLocalStorage = (key, initialValue) => {
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(error);
+      return initialValue;
+    }
+  });
 
-  const handleClick = () => {
-    setCount(count + 1);
+  const setValue = (value) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error(error);
+    }
   };
 
+  return [storedValue, setValue];
+};
+
+const PersistentCounter = () => {
+  const [count, setCount] = useLocalStorage('counter', 0);
+
+  const increment = () => setCount(prevCount => prevCount + 1);
+  const decrement = () => setCount(prevCount => prevCount - 1);
+  const reset = () => setCount(0);
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-6">Claude Artifacts React</h1>
-        <Button
-          onClick={handleClick}
-          className="mb-4"
+    <div className="flex flex-col items-center space-y-4">
+      <h2 className="text-2xl font-bold">Persistent Counter</h2>
+      <p className="text-xl">Count: {count}</p>
+      <div className="flex space-x-2">
+        <button 
+          onClick={decrement}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
         >
-          Say Hi
-        </Button>
-        <p className="text-lg">Said Hi {count} times</p>
+          Decrement
+        </button>
+        <button 
+          onClick={increment}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+        >
+          Increment
+        </button>
+        <button 
+          onClick={reset}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+        >
+          Reset
+        </button>
       </div>
     </div>
   );
 };
 
-export default App;
+export default PersistentCounter;
